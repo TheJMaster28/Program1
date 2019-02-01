@@ -91,7 +91,6 @@ private String readHTTPRequest(InputStream is, OutputStream os)
 			 BufferedReader reader = new BufferedReader( new FileReader(line.substring(5, line.length() - 9) ) );
 			 StringBuilder s = new StringBuilder();
 			 String l = reader.readLine();
-			 System.out.println(l);
 			 while ( l != null ) {
 				 s.append(l + "\n");
 				 
@@ -99,11 +98,6 @@ private String readHTTPRequest(InputStream is, OutputStream os)
 			 }
 			 l = s.toString();
 			 return l;
-			 //System.out.println(l);
-			 //writeRequestContent(os, is, l );
-			 //os.write(l.getBytes());
-			 //File requestFile = new File(line.substring(4, line.length() - 9) );
-			 //os.write(requestFile.readAllBytes()
 		 }
 		 
       } catch (Exception e) {
@@ -152,39 +146,6 @@ private void writeContent(OutputStream os) throws Exception
 }
 private void writeRequestContent(OutputStream os, InputStream is, String request ) throws Exception {
 	
-	os.flush();
-	
-	//writeHTTPHeader(os,"text/html");
-	
-	// write somw how to process string to find <cs371date> and <cs371server>
-	//Scanner scan = new Scanner(request);
-	
-	//scan.nextLine().replace(
-	/*StringBuilder s = new StringBuilder();
-	String l = "";
-	while ( scan.hasNext() ) {
-		l = 
-		s.append(scan.next());
-		l = s.toString();
-		if ( l.compareTo("<cs371date>") == 0) {
-			Date d = new Date();
-			DateFormat df = DateFormat.getDateTimeInstance();
-			df.setTimeZone(TimeZone.getTimeZone("GMT"));
-			os.write("Date: ".getBytes());
-			os.write((df.format.(d)).getBytes();
-			
-		}
-		else if ( l.compareTo("<cs371server>") == 0 ) {
-			os.write("The Cake is a Lie".getBytes());
-			\
-		}
-		else if ( l.length
-	} 
-	
-	while (scan.hasNext()){
-		
-		
-	}*/
 	Date d = new Date();
 	DateFormat df = DateFormat.getDateTimeInstance();
 	df.setTimeZone(TimeZone.getTimeZone("GMT"));
@@ -193,8 +154,8 @@ private void writeRequestContent(OutputStream os, InputStream is, String request
 }
 private void ErrorWrite ( OutputStream os ) throws Exception {
 	os.write("<html><head></head><body>\n".getBytes());
-   os.write("<h3>404 Not Found</h3>\n".getBytes());
-   os.write("</body></html>\n".getBytes());
+    os.write("<h3>404 Not Found</h3>\n".getBytes());
+    os.write("</body></html>\n".getBytes());
 }
 
 } // end class
