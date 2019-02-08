@@ -1,4 +1,5 @@
 <project name="Program1" default="compile" basedir="." >
+<property name="src" location="src"/>
 
 <target name ="compile" >
 	<javac srcdir="${src}" >
