@@ -54,15 +54,22 @@ public void run()
    try {
       InputStream  is = socket.getInputStream();
       OutputStream os = socket.getOutputStream();
-      String request = readHTTPRequest(is,os);
-      writeHTTPHeader(os,"text/html"); 
-	  if ( error == 1 )
-		ErrorWrite(os);
-	  else if ( request.isEmpty() )
-		writeContent(os);
-	  else
-		 writeRequestContent(os, is, request );
-      os.flush();
+      String request = readHTTPRequest(is);
+	  File file = new File(request);
+	  if ( !file.exists() || !file.isFile() ) {
+		  if (request.compareTo("") != 0) {
+			  error = 1;
+		  }
+	  }
+	  writeHTTPHeader(os,"text/html"); 
+	  if ( request.compareTo("") == 0 )
+		  writeHome(os);
+      else 
+		 if ( error == 0 ) 
+			writeContent(os, file);
+	  
+	  
+	  os.flush();
       socket.close();
    } catch (Exception e) {
       System.err.println("Output error: "+e);
@@ -74,9 +81,11 @@ public void run()
 /**
 * Read the HTTP request header.
 **/
-private String readHTTPRequest(InputStream is, OutputStream os)
+private String readHTTPRequest(InputStream is )
 {
    String line;
+   String lineSubString = "";
+   File file = null; 
    BufferedReader r = new BufferedReader(new InputStreamReader(is));
    while (true) {
       try {
@@ -87,26 +96,16 @@ private String readHTTPRequest(InputStream is, OutputStream os)
 		 // my stuuf here
 		 
 		 if ( line.substring(0,3).compareTo("GET") == 0 ){
-			 if ( line.substring(5, line.length() - 9).compareTo("") == 0 ) break;
-			 BufferedReader reader = new BufferedReader( new FileReader(line.substring(5, line.length() - 9) ) );
-			 StringBuilder s = new StringBuilder();
-			 String l = reader.readLine();
-			 while ( l != null ) {
-				 s.append(l + "\n");
-				 
-				 l = reader.readLine();
-			 }
-			 l = s.toString();
-			 return l;
+			lineSubString = line.substring(5, line.length() - 9);
+			file = new File(lineSubString);
+			
 		 }
-		 
       } catch (Exception e) {
          System.err.println("Request error: "+e);
-		 error =1;
-         break;
+		 break;
       }
    }
-   return "";
+   return lineSubString;
 }
 
 /**
@@ -119,7 +118,10 @@ private void writeHTTPHeader(OutputStream os, String contentType) throws Excepti
    Date d = new Date();
    DateFormat df = DateFormat.getDateTimeInstance();
    df.setTimeZone(TimeZone.getTimeZone("GMT"));
-   os.write("HTTP/1.1 200 OK\n".getBytes());
+   if ( error == 0 )
+	os.write("HTTP/1.1 200 OK\n".getBytes());
+   else
+	os.write("HTTP/1.0 404 Not Found\n".getBytes());
    os.write("Date: ".getBytes());
    os.write((df.format(d)).getBytes());
    os.write("\n".getBytes());
@@ -138,24 +140,36 @@ private void writeHTTPHeader(OutputStream os, String contentType) throws Excepti
 * be done after the HTTP header has been written out.
 * @param os is the OutputStream object to write to
 **/
-private void writeContent(OutputStream os) throws Exception
+private void writeContent(OutputStream os, File request) throws Exception
 {
-   os.write("<html><head></head><body>\n".getBytes());
-   os.write("<h3>My web server works!\n how does this work?</h3>\n".getBytes());
-   os.write("</body></html>\n".getBytes());
+	Date d = new Date();
+	DateFormat df = DateFormat.getDateTimeInstance();
+	df.setTimeZone(TimeZone.getTimeZone("GMT"));
+	//System.out.println( "*** " + request.isFile() + " " + request.getPath() );
+	if ( request.exists() ) {
+		Scanner scan = new Scanner(request);
+		while ( scan.hasNext() ) {
+			os.write(scan.nextLine().replace("<cs371date>", (df.format(d)) ).replace("<cs371server>", "Jeffrey's Java Server" ).getBytes() );
+		}
+	}
+   //os.write("HTTP/1.1 404 Not Found".getBytes());
+   //os.write("<h3>My web server works!\n how does this work?</h3>\n".getBytes());
+   //os.write("</body></html>\n".getBytes());
 }
-private void writeRequestContent(OutputStream os, InputStream is, String request ) throws Exception {
+/*private void writeRequestContent(OutputStream os, InputStream is, String request ) throws Exception {
 	
 	Date d = new Date();
 	DateFormat df = DateFormat.getDateTimeInstance();
 	df.setTimeZone(TimeZone.getTimeZone("GMT"));
 	os.write(request.replace("<cs371date>", (df.format(d)) ).replace("<cs371server>", "Jeffrey's Java Server" ).getBytes() );
 	
-}
+} */
 private void ErrorWrite ( OutputStream os ) throws Exception {
 	os.write("<html><head></head><body>\n".getBytes());
     os.write("<h3>404 Not Found</h3>\n".getBytes());
     os.write("</body></html>\n".getBytes());
 }
-
+private void writeHome( OutputStream os ) throws Exception {
+	os.write("<html><head></head><body>\n<h3>Home Page\n</h3>\n</body></html>\n".getBytes());
+}
 } // end class
