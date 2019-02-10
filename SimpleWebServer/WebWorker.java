@@ -80,6 +80,7 @@ public void run()
 
 /**
 * Read the HTTP request header.
+* @return String of request to be checked
 **/
 private String readHTTPRequest(InputStream is )
 {
@@ -129,6 +130,10 @@ private void writeHTTPHeader(OutputStream os, String contentType) throws Excepti
    os.write("Content-Type: ".getBytes());
    os.write(contentType.getBytes());
    os.write("\n\n".getBytes()); // HTTP header ends with 2 newlines
+   // writes out eror page
+   if ( error == 1 ) {
+	   os.write( "<html><head>404 Not Found </head> </html>".getBytes() );
+   }
    return;
 }
 
