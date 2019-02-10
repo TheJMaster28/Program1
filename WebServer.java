@@ -13,7 +13,11 @@
 * connections. See the WebWorker source for more information about it.
 * 
 **/
-
+/* 
+* Jeffrey Lansford
+* Program 1
+* February 10, 2019
+*/
 import java.net.*;
 
 public class WebServer

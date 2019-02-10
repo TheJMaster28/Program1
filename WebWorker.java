@@ -20,6 +20,11 @@
 *
 **/
 
+/*
+* Jeffrey Lansford
+* Program 1
+* February 10, 2019
+*/
 import java.net.Socket;
 import java.lang.Runnable;
 import java.io.*;
