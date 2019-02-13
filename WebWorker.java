@@ -28,6 +28,7 @@
 import java.net.Socket;
 import java.lang.Runnable;
 import java.io.*;
+import java.nio.file.Files;
 import java.text.DateFormat;
 import java.util.*;
 
@@ -36,6 +37,8 @@ public class WebWorker implements Runnable
 
 private Socket socket;
 private int error=0;
+private boolean image = false;
+private String imageList[] = {"gif", "jpeg", "png", "jpg" };
 
 /**
 * Constructor: must have a valid open socket
@@ -58,8 +61,21 @@ public void run()
       InputStream  is = socket.getInputStream();
       OutputStream os = socket.getOutputStream();
       String request = readHTTPRequest(is);
-	  File file = new File(request);
+	  File file;
+	  for( int i = 0; i < imageList.length && request.length() != 0; i ++ ) {
+		  if ( smartSubString(request).compareTo(imageList[i] ) == 0 )
+			  image = true;
+	  }
+	  if ( image ) {
+		  file = new File(request.substring( 0, request.length() - ( smartSubString(request).length() + 1 )) + "." + smartSubString(request) );
+		  System.out.println("read image");
+	  }
+	  else {
+		  file = new File(request);
+	  }
+	  
 	  // checks if file exixts and is a file it can write
+	  System.out.println(file.isFile() + ":isFile ;" +file.exists() + ":exists" ); 
 	  if ( !file.exists() || !file.isFile() ) {
 		  if (request.compareTo("") != 0) {
 			  error = 1;
@@ -72,8 +88,10 @@ public void run()
 	  
 	  // otherwise write the file 
       else 
-		 if ( error == 0 ) 
-			writeContent(os, file);
+		  if ( image ) 
+			  writeImage(os, file);
+		  else if ( error == 0 ) 
+			  writeContent(os, file);
 	  os.flush();
       socket.close();
    } catch (Exception e) {
@@ -170,4 +188,21 @@ private void writeContent(OutputStream os, File request) throws Exception
 private void writeHome( OutputStream os ) throws Exception {
 	os.write("<html><head></head><body>\n<h3>Home Page\n</h3>\n</body></html>\n".getBytes());
 }
+private void writeImage( OutputStream os, File request ) throws Exception {
+	
+	String encode = Base64.getEncoder().encodeToString(Files.readAllBytes(request.toPath()) );
+	String write = "<img src= \"data:image/png;base64, " + encode + "\">";
+	os.write(write.getBytes());
+	
+}
+private String smartSubString( String s ) {
+	if ( s.length() - 1 <= -1 ) 
+		return "";
+	if ( s.charAt(s.length()-1) == '/' )
+			return "";
+		String str = smartSubString(s.substring(0, s.length() - 1 ) )+ s.charAt(s.length()-1);
+		return str;
+	
+}
+
 } // end class
