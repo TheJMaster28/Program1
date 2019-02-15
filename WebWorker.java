@@ -38,7 +38,8 @@ public class WebWorker implements Runnable
 private Socket socket;
 private int error=0;
 private boolean image = false;
-private String imageList[] = {"gif", "jpeg", "png", "jpg" };
+private String imageList[] = {"/gif", "/jpeg", "/png", "/jpg" , ".gif", ".jpeg", ".png"};
+String imageType ="";
 
 /**
 * Constructor: must have a valid open socket
@@ -62,26 +63,33 @@ public void run()
       OutputStream os = socket.getOutputStream();
       String request = readHTTPRequest(is);
 	  File file;
-	  for( int i = 0; i < imageList.length && request.length() != 0; i ++ ) {
-		  if ( smartSubString(request).compareTo(imageList[i] ) == 0 )
+	  // checks if it is a image file request
+	  for( int i = 0; i < imageList.length && request.length() != 0; i++ ) {
+		  if ( request.endsWith(imageList[i]) ) {
 			  image = true;
+			  imageType = imageList[i];
+		  }
 	  }
-	  if ( image ) {
+	  // adds "." instead of "/" for FIle class
+	  if ( image && imageType.charAt(0) == '/') {
 		  file = new File(request.substring( 0, request.length() - ( smartSubString(request).length() + 1 )) + "." + smartSubString(request) );
-		  System.out.println("read image");
 	  }
 	  else {
 		  file = new File(request);
 	  }
 	  
-	  // checks if file exixts and is a file it can write
-	  System.out.println(file.isFile() + ":isFile ;" +file.exists() + ":exists" ); 
+	  // checks if file exixts and is a file it can write 
 	  if ( !file.exists() || !file.isFile() ) {
 		  if (request.compareTo("") != 0) {
 			  error = 1;
 		  }
 	  }
-	  writeHTTPHeader(os,"text/html"); 
+	  // writes header with image type or html type
+	  String header = "text/html";
+	  if ( image && file.exists() )
+		  header = "image" + imageType.replace(".","/");
+	  
+	  writeHTTPHeader(os,header); 
 	  // writes home page if URL is localhost:8080/
 	  if ( request.compareTo("") == 0 )
 		  writeHome(os);
@@ -147,8 +155,6 @@ private void writeHTTPHeader(OutputStream os, String contentType) throws Excepti
    os.write((df.format(d)).getBytes());
    os.write("\n".getBytes());
    os.write("Server: Jon's very own server\n".getBytes());
-   //os.write("Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT\n".getBytes());
-   //os.write("Content-Length: 438\n".getBytes()); 
    os.write("Connection: close\n".getBytes());
    os.write("Content-Type: ".getBytes());
    os.write(contentType.getBytes());
@@ -188,13 +194,21 @@ private void writeContent(OutputStream os, File request) throws Exception
 private void writeHome( OutputStream os ) throws Exception {
 	os.write("<html><head></head><body>\n<h3>Home Page\n</h3>\n</body></html>\n".getBytes());
 }
+
+/**
+* Writes an image file that passes to it
+* @param os is OutputStream to write to and request is the file from the request
+*/
 private void writeImage( OutputStream os, File request ) throws Exception {
 	
-	String encode = Base64.getEncoder().encodeToString(Files.readAllBytes(request.toPath()) );
-	String write = "<img src= \"data:image/png;base64, " + encode + "\">";
-	os.write(write.getBytes());
-	
+	if ( request.exists() ) 
+		os.write(Files.readAllBytes(request.toPath()));
 }
+
+/**
+* removes the "/" in strings like "/gif"
+* @param String to get end of
+*/
 private String smartSubString( String s ) {
 	if ( s.length() - 1 <= -1 ) 
 		return "";

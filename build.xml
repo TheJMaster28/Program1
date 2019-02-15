@@ -1,9 +1,15 @@
 <project name="Program1" default="compile" basedir="." >
 <property name="src" location="."/>
+<target name ="run" depends="compile">
+	<java classname="WebServer" classpath="." fork = "true" >
+	
+	</java>
+	
+</target>
 
 <target name ="compile" >
 	<javac srcdir="${src}" >
-		
 	</javac>
+	
 </target>
 </project>
